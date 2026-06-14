@@ -8,10 +8,13 @@
   },
   "scripts": {
     "start": "node bin/clido.js",
+    "typecheck": "tsc --noEmit",
     "lint:md": "markdownlint-cli2"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.22.1"
+    "@types/node": "^25.9.3",
+    "markdownlint-cli2": "^0.22.1",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "cfonts": "^3.3.1"

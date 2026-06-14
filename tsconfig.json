@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "types": ["node"],
+    "module": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+  },
+  "include": ["src/**/*.ts"]
+}
