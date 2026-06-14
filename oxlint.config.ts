@@ -1,27 +1,46 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
-  plugins: ["typescript", "unicorn", "oxc"],
+  plugins: ["typescript", "unicorn", "oxc", "jsdoc"],
+  jsPlugins: [{ name: "jsdoc-js", specifier: "eslint-plugin-jsdoc" }],
   categories: {
     correctness: "error",
   },
   env: {
     builtin: true,
     node: true,
-    es2024: true,
   },
-  // アロー関数を基本とする方針はアプリ本体(src)にのみ適用する。
-  // ルート直下の設定ファイル(commitlint.config.ts 等)は対象外にする。
   overrides: [
     {
       files: ["src/**/*.{ts,tsx,mts,cts}"],
       rules: {
-        // アロー関数を基本とする: 関数宣言を禁止し関数式(=アロー)を強制
         "func-style": ["error", "expression"],
-        // コールバックはアロー関数に統一
         "prefer-arrow-callback": "error",
-        // アロー関数の本体は不要な波括弧を省く
-        "arrow-body-style": ["error", "as-needed"],
+        "arrow-body-style": "error",
+
+        /**
+         * JSDoc Rules
+         */
+        "jsdoc-js/require-jsdoc": [
+          "error",
+          {
+            require: {
+              FunctionExpression: true,
+              ArrowFunctionExpression: true,
+              MethodDefinition: true,
+              ClassDeclaration: true,
+              ClassExpression: true,
+            },
+          },
+        ],
+        "jsdoc/check-access": "error",
+        "jsdoc/empty-tags": "error",
+        "jsdoc/require-param": "error",
+        "jsdoc/require-param-description": "error",
+        "jsdoc/require-param-name": "error",
+        "jsdoc/require-returns": "error",
+        "jsdoc/require-returns-description": "error",
+        "jsdoc/require-yields-description": "error",
       },
     },
   ],
