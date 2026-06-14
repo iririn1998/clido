@@ -3,16 +3,24 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "bin": {
     "clido": "src/cli.ts"
   },
   "scripts": {
     "start": "node src/cli.ts",
-    "typecheck": "tsc --noEmit",
-    "lint:md": "markdownlint-cli2"
+    "prepare": "lefthook install",
+    "lint:commit": "commitlint --from ${COMMITLINT_FROM:-HEAD~1} --to ${COMMITLINT_TO:-HEAD} --verbose",
+    "lint:md": "markdownlint-cli2",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@types/node": "^25.9.3",
+    "lefthook": "^2.1.9",
     "markdownlint-cli2": "^0.22.1",
     "typescript": "^6.0.3"
   },
