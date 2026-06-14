@@ -2,9 +2,7 @@
 
 import cfonts from "cfonts";
 
-const { say } = cfonts;
-
-say("clido", {
+cfonts.say("clido", {
   font: "block",
   align: "left",
   colors: ["cyan", "blue"],

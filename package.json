@@ -4,10 +4,10 @@
   "type": "module",
   "packageManager": "pnpm@11.2.2",
   "bin": {
-    "clido": "bin/clido.js"
+    "clido": "src/cli.ts"
   },
   "scripts": {
-    "start": "node bin/clido.js",
+    "start": "node src/cli.ts",
     "typecheck": "tsc --noEmit",
     "lint:md": "markdownlint-cli2"
   },
