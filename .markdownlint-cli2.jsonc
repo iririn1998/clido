@@ -1,13 +1,8 @@
 {
   "config": {
     "default": true,
-    "MD013": false
+    "MD013": false,
   },
-  "globs": [
-    "**/*.md"
-  ],
-  "ignores": [
-    "node_modules",
-    "dist"
-  ]
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules", "dist"],
 }

@@ -5,7 +5,7 @@
     "module": "nodenext",
     "strict": true,
     "esModuleInterop": true,
-    "noEmit": true,
+    "noEmit": true
   },
   "include": ["src/**/*.ts"]
 }
