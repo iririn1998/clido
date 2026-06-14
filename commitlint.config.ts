@@ -10,11 +10,10 @@ export default {
     {
       rules: {
         "message-ascii": (parsed: CommitlintParsedCommit) => {
-          const message = [parsed.header, parsed.body, parsed.footer]
-            .filter(Boolean)
-            .join("\n\n");
+          const message = [parsed.header, parsed.body, parsed.footer].filter(Boolean).join("\n\n");
 
           return [
+            // oxlint-disable-next-line no-control-regex -- intentionally matching ASCII control chars (tab/LF/CR)
             /^[\x09\x0a\x0d\x20-\x7e]*$/.test(message),
             "commit message must be written in English (ASCII only)",
           ];
