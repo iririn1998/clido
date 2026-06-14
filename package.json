@@ -1,20 +1,23 @@
 {
   "name": "clido",
   "private": true,
-  "type": "module",
-  "packageManager": "pnpm@11.2.2",
-  "engines": {
-    "node": ">=22.18.0"
-  },
   "bin": {
     "clido": "src/cli.ts"
   },
+  "type": "module",
   "scripts": {
     "start": "node src/cli.ts",
     "prepare": "lefthook install",
+    "lint": "oxlint -c oxlint.config.ts",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix",
     "lint:commit": "commitlint --from ${COMMITLINT_FROM:-HEAD~1} --to ${COMMITLINT_TO:-HEAD} --verbose",
     "lint:md": "markdownlint-cli2",
+    "format": "oxfmt -c oxfmt.config.ts",
+    "format:check": "oxfmt -c oxfmt.config.ts --check",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cfonts": "^3.3.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
@@ -22,9 +25,12 @@
     "@types/node": "^25.9.3",
     "lefthook": "^2.1.9",
     "markdownlint-cli2": "^0.22.1",
+    "oxfmt": "^0.54.0",
+    "oxlint": "^1.69.0",
     "typescript": "^6.0.3"
   },
-  "dependencies": {
-    "cfonts": "^3.3.1"
-  }
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "packageManager": "pnpm@11.2.2"
 }
