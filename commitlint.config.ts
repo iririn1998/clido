@@ -1,9 +1,15 @@
-module.exports = {
+type CommitlintParsedCommit = {
+  header?: string | null;
+  body?: string | null;
+  footer?: string | null;
+};
+
+export default {
   extends: ["@commitlint/config-conventional"],
   plugins: [
     {
       rules: {
-        "message-ascii": (parsed) => {
+        "message-ascii": (parsed: CommitlintParsedCommit) => {
           const message = [parsed.header, parsed.body, parsed.footer]
             .filter(Boolean)
             .join("\n\n");
