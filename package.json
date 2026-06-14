@@ -1,11 +1,19 @@
 {
   "name": "clido",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@11.2.2",
+  "bin": {
+    "clido": "bin/clido.js"
+  },
   "scripts": {
+    "start": "node bin/clido.js",
     "lint:md": "markdownlint-cli2"
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.22.1"
+  },
+  "dependencies": {
+    "cfonts": "^3.3.1"
   }
 }
