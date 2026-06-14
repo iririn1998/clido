@@ -10,7 +10,6 @@ clido は、ローカルファーストな todo 管理 CLI です。
 clido
 ```
 
-
 ## コマンド一覧
 
 | コマンド | 構文 | 機能 |
@@ -24,9 +23,3 @@ clido
 | `show` | `clido show <id>` | 単一の todo の詳細を表示する。 |
 | `help` | `clido help [<コマンド>]` / `clido --help` | 使い方のヘルプを表示する。 |
 | `version` | `clido --version` | パッケージバージョンを表示する。 |
-
-
-
-## 仕様
-
-[docs/spec.md](docs/spec.md) を参照してください。
