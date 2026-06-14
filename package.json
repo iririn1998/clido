@@ -11,7 +11,7 @@
     "lint": "oxlint -c oxlint.config.ts",
     "lint:fix": "oxlint -c oxlint.config.ts --fix",
     "lint:commit": "commitlint --from ${COMMITLINT_FROM:-HEAD~1} --to ${COMMITLINT_TO:-HEAD} --verbose",
-    "lint:md": "markdownlint-cli2",
+    "lint:md": "markdownlint-cli2 --config .markdownlint-cli2.json",
     "format": "oxfmt -c oxfmt.config.ts",
     "format:check": "oxfmt -c oxfmt.config.ts --check",
     "typecheck": "tsc --noEmit"
