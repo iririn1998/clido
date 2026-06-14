@@ -1,0 +1,11 @@
+{
+  "name": "clido",
+  "private": true,
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "lint:md": "markdownlint-cli2"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.22.1"
+  }
+}
