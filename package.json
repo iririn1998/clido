@@ -15,6 +15,8 @@
     "lint:md": "markdownlint-cli2 --config .markdownlint-cli2.json",
     "format": "oxfmt -c oxfmt.config.ts",
     "format:check": "oxfmt -c oxfmt.config.ts --check",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -29,7 +31,8 @@
     "markdownlint-cli2": "^0.22.1",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=22.18.0"
