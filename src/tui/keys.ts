@@ -4,12 +4,12 @@
  */
 export type TuiAction = "up" | "down" | "toggle" | "quit" | "none";
 
-/** `↑` の端末エスケープシーケンス（ESC `[` `A`）。 */
-const UP_ARROW = "[A";
-/** `↓` の端末エスケープシーケンス（ESC `[` `B`）。 */
-const DOWN_ARROW = "[B";
+/** `↑` の端末エスケープシーケンス（ESC `[A`）。 */
+const UP_ARROW = "\x1b[A";
+/** `↓` の端末エスケープシーケンス（ESC `[B`）。 */
+const DOWN_ARROW = "\x1b[B";
 /** Ctrl-C（ETX）。raw mode では SIGINT ではなくこのバイトが届く。 */
-const CTRL_C = "";
+const CTRL_C = "\x03";
 
 /**
  * raw mode の stdin から届いた入力チャンクを {@link TuiAction} へ変換する純粋関数。
