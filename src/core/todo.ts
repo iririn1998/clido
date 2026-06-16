@@ -53,3 +53,21 @@ export const reopen = (todo: Todo, now: Date): Todo => {
   }
   return { ...todo, status: "open", completedAt: null, updatedAt: now.toISOString() };
 };
+
+/**
+ * todo のタイトルを変更する純粋関数。`title` を差し替え、`updatedAt` を `now` に設定する。
+ * `title` は trim・非空検査をコマンド層で済ませた値を受け取る前提（本関数では検査しない）。
+ * 変更後のタイトルが現在と同一なら同一オブジェクトを返し、`updatedAt` の無意味な更新を避ける
+ * （edit は冪等）。`status` / `completedAt` は変更しない。
+ *
+ * @param todo - 変更元の Todo。
+ * @param title - 新しいタイトル（trim 済みの非空文字列）。
+ * @param now - 変更時刻。
+ * @returns タイトル変更後の Todo（変更がなければ入力をそのまま返す）。
+ */
+export const rename = (todo: Todo, title: string, now: Date): Todo => {
+  if (todo.title === title) {
+    return todo;
+  }
+  return { ...todo, title, updatedAt: now.toISOString() };
+};

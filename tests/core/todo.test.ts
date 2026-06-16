@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { complete, reopen, type Todo } from "../../src/core/todo.ts";
+import { complete, rename, reopen, type Todo } from "../../src/core/todo.ts";
 
 const createdAt = "2026-06-16T09:00:00.000Z";
 const now = new Date("2026-06-16T12:00:00.000Z");
@@ -67,6 +67,31 @@ describe("reopen", () => {
 
   it("is idempotent when already open", () => {
     const result = reopen(openTodo, now);
+
+    expect(result).toBe(openTodo);
+  });
+});
+
+describe("rename", () => {
+  it("replaces the title and updates updatedAt, preserving status/completedAt", () => {
+    const result = rename(doneTodo, "卵を買う", now);
+
+    expect(result).toEqual({
+      ...doneTodo,
+      title: "卵を買う",
+      updatedAt: now.toISOString(),
+    });
+  });
+
+  it("does not mutate the input todo", () => {
+    rename(openTodo, "卵を買う", now);
+
+    expect(openTodo.title).toBe("牛乳を買う");
+    expect(openTodo.updatedAt).toBe(createdAt);
+  });
+
+  it("is idempotent and returns the same object when the title is unchanged", () => {
+    const result = rename(openTodo, openTodo.title, now);
 
     expect(result).toBe(openTodo);
   });
