@@ -48,4 +48,15 @@ describe("runCli", () => {
     expect(exitCode).toBe(2);
     expect(err.join("\n")).toContain("未知のオプション");
   });
+
+  it("falls back to the banner when bare and stdin is not a TTY", async () => {
+    // vitest runs with a non-TTY stdin, so the interactive list is skipped and
+    // the banner guidance is printed instead of hanging on raw-mode input.
+    const { io, out } = captureIo();
+
+    const exitCode = await runCli(["node", "clido"], io);
+
+    expect(exitCode).toBe(0);
+    expect(out.join("\n")).toContain("clido help");
+  });
 });

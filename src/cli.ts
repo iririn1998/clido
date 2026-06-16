@@ -6,6 +6,7 @@ import type { ArgDef, CommandDef } from "citty";
 import { pathToFileURL } from "node:url";
 import { createGetContext } from "./app/context.ts";
 import { prescanJson, reportError } from "./app/exit.ts";
+import { runInteractive } from "./app/interactive.ts";
 import { createRootCommand, rootMeta } from "./app/root.ts";
 import { UsageError } from "./core/errors.ts";
 import type { Io } from "./infra/output.ts";
@@ -140,6 +141,12 @@ export const runCli = async (argv: readonly string[], io: Io = defaultIo): Promi
   }
 
   if (command === undefined) {
+    // 端末上なら対話的な todo 一覧を起動する。パイプ等の非 TTY では raw mode が
+    // 使えずキー入力も無いため、従来どおりバナーを表示して `clido help` へ誘導する。
+    if (process.stdin.isTTY === true && process.stdout.isTTY === true) {
+      await runInteractive(process.stdin, process.stdout);
+      return 0;
+    }
     showBanner(io);
     return 0;
   }
