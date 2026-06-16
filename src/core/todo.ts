@@ -21,3 +21,35 @@ export type Todo = {
   updatedAt: string;
   completedAt: string | null;
 };
+
+/**
+ * todo を完了済みにする純粋関数。`status` を `done`、`completedAt` / `updatedAt` を
+ * `now` に設定する。既に `done` なら `completedAt` を保ったまま同一オブジェクトを返し、
+ * 完了時刻の上書きを避ける（done コマンドは冪等）。
+ *
+ * @param todo - 遷移元の Todo。
+ * @param now - 遷移時刻。
+ * @returns 完了済みの Todo（既に完了なら入力をそのまま返す）。
+ */
+export const complete = (todo: Todo, now: Date): Todo => {
+  if (todo.status === "done") {
+    return todo;
+  }
+  const timestamp = now.toISOString();
+  return { ...todo, status: "done", completedAt: timestamp, updatedAt: timestamp };
+};
+
+/**
+ * todo を未完了に戻す純粋関数。`status` を `open`、`completedAt` を `null`、
+ * `updatedAt` を `now` に設定する。既に `open` なら同一オブジェクトを返す（reopen は冪等）。
+ *
+ * @param todo - 遷移元の Todo。
+ * @param now - 遷移時刻。
+ * @returns 未完了の Todo（既に未完了なら入力をそのまま返す）。
+ */
+export const reopen = (todo: Todo, now: Date): Todo => {
+  if (todo.status === "open") {
+    return todo;
+  }
+  return { ...todo, status: "open", completedAt: null, updatedAt: now.toISOString() };
+};
