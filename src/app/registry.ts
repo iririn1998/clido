@@ -1,5 +1,6 @@
 import { createAddCommand } from "../commands/add.ts";
 import { createDoneCommand } from "../commands/done.ts";
+import { createEditCommand } from "../commands/edit.ts";
 import { createListCommand } from "../commands/list.ts";
 import { createReopenCommand } from "../commands/reopen.ts";
 import type { CommandFactory } from "./context.ts";
@@ -15,4 +16,5 @@ export const registry: Record<string, CommandFactory> = {
   list: createListCommand,
   done: createDoneCommand,
   reopen: createReopenCommand,
+  edit: createEditCommand,
 };
