@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { NotFoundError, StorageError } from "../../src/core/errors.ts";
+import type { Todo } from "../../src/core/todo.ts";
 import { createJsonTodoRepository } from "../../src/repository/json-todo-repository.ts";
 
 let dir: string;
@@ -77,6 +78,35 @@ describe("createJsonTodoRepository", () => {
     await repo.delete(first.id);
 
     const next = await repo.add({ title: "two", now: at("2026-06-16T09:01:00.000Z") });
+    expect(next.id).toBe(2);
+  });
+
+  it("deletes only completed todos in bulk and returns the count", async () => {
+    const repo = createJsonTodoRepository(filePath);
+    const first = await repo.add({ title: "done one", now: at("2026-06-16T09:00:00.000Z") });
+    await repo.add({ title: "open one", now: at("2026-06-16T09:01:00.000Z") });
+    const third = await repo.add({ title: "done two", now: at("2026-06-16T09:02:00.000Z") });
+    const markDone = (iso: string) => (todo: Todo) => ({
+      ...todo,
+      status: "done" as const,
+      completedAt: iso,
+      updatedAt: iso,
+    });
+    await repo.update(first.id, markDone("2026-06-16T10:00:00.000Z"));
+    await repo.update(third.id, markDone("2026-06-16T10:01:00.000Z"));
+
+    expect(await repo.deleteCompleted()).toBe(2);
+    expect((await repo.list({ status: "open" })).map((todo) => todo.title)).toEqual(["open one"]);
+    expect(await repo.list()).toHaveLength(1);
+  });
+
+  it("returns 0 and keeps ids when there is no completed todo to clear", async () => {
+    const repo = createJsonTodoRepository(filePath);
+    await repo.add({ title: "open one", now: at("2026-06-16T09:00:00.000Z") });
+
+    expect(await repo.deleteCompleted()).toBe(0);
+
+    const next = await repo.add({ title: "open two", now: at("2026-06-16T09:01:00.000Z") });
     expect(next.id).toBe(2);
   });
 

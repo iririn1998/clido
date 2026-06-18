@@ -30,4 +30,10 @@ export interface TodoRepository {
    * `id` の todo を削除する。存在しなければ `NotFoundError` を throw する。
    */
   delete(id: number): Promise<void>;
+
+  /**
+   * 完了済み（`done`）の todo をすべて削除し、削除件数を返す。対象が0件でも
+   * throw せず `0` を返す（一括削除は冪等で、空振りはエラーではない）。
+   */
+  deleteCompleted(): Promise<number>;
 }

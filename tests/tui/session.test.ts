@@ -50,6 +50,7 @@ const memoryRepo = (initial: Todo[]): { repo: TodoRepository; todos: Todo[] } =>
       return updated;
     },
     delete: async () => undefined,
+    deleteCompleted: async () => 0,
   };
   return {
     repo,

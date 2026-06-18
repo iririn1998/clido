@@ -14,6 +14,7 @@ export const makeFakeRepo = (overrides: Partial<TodoRepository> = {}): TodoRepos
   add: notImplemented("add"),
   update: notImplemented("update"),
   delete: async () => undefined,
+  deleteCompleted: async () => 0,
   ...overrides,
 });
 

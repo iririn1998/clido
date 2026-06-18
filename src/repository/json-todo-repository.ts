@@ -189,5 +189,22 @@ export const createJsonTodoRepository = (filePath: string): TodoRepository => {
       const todos = storage.todos.filter((todo) => todo.id !== id);
       await save({ ...storage, todos });
     },
+
+    /**
+     * 完了済みの todo をすべて削除し、削除件数を返す。1件も無ければ書き込みを
+     * 行わず `0` を返す（無駄なファイル更新を避ける）。`nextId` は据え置く。
+     *
+     * @returns 削除した件数。
+     */
+    deleteCompleted: async (): Promise<number> => {
+      const storage = await load();
+      const remaining = storage.todos.filter((todo) => todo.status !== "done");
+      const removed = storage.todos.length - remaining.length;
+      if (removed === 0) {
+        return 0;
+      }
+      await save({ ...storage, todos: remaining });
+      return removed;
+    },
   };
 };
