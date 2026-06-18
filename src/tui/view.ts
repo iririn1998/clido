@@ -4,8 +4,98 @@ import { isQuitFocused, type TuiState } from "./state.ts";
 /** 末尾の「終了」項目のラベル。 */
 export const QUIT_LABEL = "[ 終了 ]";
 
-/** 画面下部に常時表示する操作ガイド。Enter / Space はフォーカス中の項目を選択する。 */
-export const helpLine = "↑/↓ (j/k): 移動   Enter/Space: 選択   q: 終了";
+/** 操作方法ボックスのタイトル。 */
+export const HELP_TITLE = "操作方法";
+
+/**
+ * 操作方法ボックスに並べるキーと説明の対。Enter / Space はフォーカス中の項目を
+ * 選択する操作で、todo なら完了トグル・「終了」項目なら終了を意味する。
+ */
+export const helpEntries: readonly (readonly [keys: string, description: string])[] = [
+  ["↑ / ↓  (j / k)", "フォーカスを移動"],
+  ["Enter / Space", "選択（完了切替 / 終了）"],
+  ["q / Ctrl-C", "終了"],
+];
+
+/**
+ * 文字が端末上で2セル幅（全角）で描画されるか判定する。日本語の仮名・漢字・
+ * 全角記号や絵文字などの主要な East Asian Wide / Fullwidth 範囲を対象にする。
+ * 矢印（`↑` / `↓`）や罫線・ダッシュなどの曖昧幅文字は1セル幅として扱う。
+ *
+ * @param codePoint - 判定する文字のコードポイント。
+ * @returns 2セル幅なら `true`。
+ */
+const isWide = (codePoint: number): boolean =>
+  (codePoint >= 0x1100 && codePoint <= 0x115f) || // Hangul Jamo
+  (codePoint >= 0x2e80 && codePoint <= 0xa4cf) || // CJK 部首〜かな〜漢字〜Yi
+  (codePoint >= 0xac00 && codePoint <= 0xd7a3) || // Hangul 音節
+  (codePoint >= 0xf900 && codePoint <= 0xfaff) || // CJK 互換漢字
+  (codePoint >= 0xfe30 && codePoint <= 0xfe4f) || // CJK 互換形
+  (codePoint >= 0xff00 && codePoint <= 0xff60) || // 全角英数・記号
+  (codePoint >= 0xffe0 && codePoint <= 0xffe6) || // 全角記号
+  (codePoint >= 0x1f300 && codePoint <= 0x1faff) || // 絵文字
+  (codePoint >= 0x20000 && codePoint <= 0x3fffd); // CJK 拡張
+
+/**
+ * 文字列の端末表示幅（セル数）を返す純粋関数。全角文字を2、その他を1で数える。
+ * 罫線の桁合わせに用いる。
+ *
+ * @param text - 計測する文字列。
+ * @returns 表示幅（セル数）。
+ */
+export const displayWidth = (text: string): number => {
+  let width = 0;
+  for (const char of text) {
+    const codePoint = char.codePointAt(0);
+    width += codePoint !== undefined && isWide(codePoint) ? 2 : 1;
+  }
+  return width;
+};
+
+/**
+ * 文字列の右側を空白で埋め、表示幅を `width` セルに揃える。`width` 未満の文字列だけを
+ * 想定し、超過分は埋めない。
+ *
+ * @param text - 対象の文字列。
+ * @param width - 目標の表示幅（セル数）。
+ * @returns 右パディング済みの文字列。
+ */
+const padRight = (text: string, width: number): string =>
+  text + " ".repeat(Math.max(0, width - displayWidth(text)));
+
+/**
+ * タイトル付きの角丸ボックスで本文行を囲む純粋関数。全角混在でも罫線がずれないよう
+ * {@link displayWidth} で桁を合わせる。
+ *
+ * @param title - 上枠に埋め込むタイトル。
+ * @param lines - 枠内に表示する本文行。
+ * @returns 枠線を含む描画行の配列。
+ */
+const boxed = (title: string, lines: readonly string[]): string[] => {
+  const titleSegment = `─ ${title} `;
+  const inner = Math.max(
+    displayWidth(titleSegment),
+    ...lines.map((line) => displayWidth(line) + 1),
+  );
+  const top = `╭${titleSegment}${"─".repeat(inner - displayWidth(titleSegment))}─╮`;
+  const bottom = `╰${"─".repeat(inner + 1)}╯`;
+  const body = lines.map((line) => `│ ${padRight(line, inner - 1)} │`);
+  return [top, ...body, bottom];
+};
+
+/**
+ * 操作方法ボックスの描画行を返す純粋関数。キー列を表示幅で揃えてから説明を続け、
+ * タイトル付きの枠で囲む。
+ *
+ * @returns 操作方法ボックスの描画行。
+ */
+export const renderHelp = (): string[] => {
+  const keyWidth = Math.max(...helpEntries.map(([keys]) => displayWidth(keys)));
+  const rows = helpEntries.map(
+    ([keys, description]) => `${padRight(keys, keyWidth)}   ${description}`,
+  );
+  return boxed(HELP_TITLE, rows);
+};
 
 /**
  * 状態を1文字のマーク（done は `x`、open は空白）へ変換する。
@@ -36,9 +126,10 @@ export const renderRow = (todo: Todo, focused: boolean): string =>
 
 /**
  * 画面全体を行配列へ整形する純粋関数。ヘッダ・各 todo 行・選択可能な「終了」項目・
- * 操作ガイドを組み立てる。空リストなら案内文を出す。Enter / Space で選択する対象を
- * フォーカスで示すため、終了項目も todo 行と同じ `>` ポインタで描く。driver はこの
- * 戻り値を改行で連結して描画するだけで、整形ロジックは I/O から独立してテストできる。
+ * 枠付きの操作方法ボックスを組み立てる。空リストなら案内文を出す。Enter / Space で
+ * 選択する対象をフォーカスで示すため、終了項目も todo 行と同じ `>` ポインタで描く。
+ * driver はこの戻り値を改行で連結して描画するだけで、整形ロジックは I/O から独立して
+ * テストできる。
  *
  * @param state - 描画する画面状態。
  * @returns 画面に出力する行の配列。
@@ -50,5 +141,5 @@ export const renderFrame = (state: TuiState): string[] => {
       ? ["todo はありません。"]
       : state.todos.map((todo, index) => renderRow(todo, index === state.focus));
   const quitRow = `${pointer(isQuitFocused(state))} ${QUIT_LABEL}`;
-  return [...header, ...rows, "", quitRow, "", helpLine];
+  return [...header, ...rows, "", quitRow, "", ...renderHelp()];
 };
