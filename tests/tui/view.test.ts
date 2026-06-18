@@ -6,6 +6,7 @@ import {
   QUIT_LABEL,
   renderFrame,
   renderHelp,
+  renderInputFrame,
   renderRow,
 } from "../../src/tui/view.ts";
 
@@ -87,5 +88,25 @@ describe("renderFrame", () => {
     expect(frame).toContain("todo はありません。");
     expect(frame).toContain(`> ${QUIT_LABEL}`);
     expect(frame.some((line) => line.includes(HELP_TITLE))).toBe(true);
+  });
+
+  it("lists the add and clear keys in the help box", () => {
+    const help = renderHelp().join("\n");
+    expect(help).toContain("todo を追加");
+    expect(help).toContain("完了済みを一括削除");
+  });
+});
+
+describe("renderInputFrame", () => {
+  it("shows the draft title followed by a cursor", () => {
+    const frame = renderInputFrame("牛乳").join("\n");
+    expect(frame).toContain("タイトル: 牛乳█");
+  });
+
+  it("includes a framed guide for commit and cancel", () => {
+    const frame = renderInputFrame("");
+    expect(frame.some((line) => line.includes(HELP_TITLE))).toBe(true);
+    expect(frame.join("\n")).toContain("追加を確定");
+    expect(frame.join("\n")).toContain("取消");
   });
 });

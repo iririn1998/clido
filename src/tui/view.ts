@@ -14,7 +14,15 @@ export const HELP_TITLE = "操作方法";
 export const helpEntries: readonly (readonly [keys: string, description: string])[] = [
   ["↑ / ↓  (j / k)", "フォーカスを移動"],
   ["Enter / Space", "選択（完了切替 / 終了）"],
+  ["a", "todo を追加"],
+  ["c", "完了済みを一括削除"],
   ["q / Ctrl-C", "終了"],
+];
+
+/** 入力モードの操作方法ボックスに並べるキーと説明の対。 */
+export const inputHelpEntries: readonly (readonly [keys: string, description: string])[] = [
+  ["Enter", "追加を確定"],
+  ["Esc / Ctrl-C", "取消"],
 ];
 
 /**
@@ -84,18 +92,26 @@ const boxed = (title: string, lines: readonly string[]): string[] => {
 };
 
 /**
- * 操作方法ボックスの描画行を返す純粋関数。キー列を表示幅で揃えてから説明を続け、
- * タイトル付きの枠で囲む。
+ * キーと説明の対を表示幅で桁揃えし、タイトル付きの枠で囲む純粋関数。一覧モードと
+ * 入力モードの操作方法ボックスを同じ整形で描くために共有する。
+ *
+ * @param entries - キー列と説明の対の配列。
+ * @returns タイトル付きの枠で囲んだ描画行。
+ */
+const renderKeyGuide = (
+  entries: readonly (readonly [keys: string, description: string])[],
+): string[] => {
+  const keyWidth = Math.max(...entries.map(([keys]) => displayWidth(keys)));
+  const rows = entries.map(([keys, description]) => `${padRight(keys, keyWidth)}   ${description}`);
+  return boxed(HELP_TITLE, rows);
+};
+
+/**
+ * 一覧モードの操作方法ボックスの描画行を返す純粋関数。
  *
  * @returns 操作方法ボックスの描画行。
  */
-export const renderHelp = (): string[] => {
-  const keyWidth = Math.max(...helpEntries.map(([keys]) => displayWidth(keys)));
-  const rows = helpEntries.map(
-    ([keys, description]) => `${padRight(keys, keyWidth)}   ${description}`,
-  );
-  return boxed(HELP_TITLE, rows);
-};
+export const renderHelp = (): string[] => renderKeyGuide(helpEntries);
 
 /**
  * 状態を1文字のマーク（done は `x`、open は空白）へ変換する。
@@ -142,4 +158,20 @@ export const renderFrame = (state: TuiState): string[] => {
       : state.todos.map((todo, index) => renderRow(todo, index === state.focus));
   const quitRow = `${pointer(isQuitFocused(state))} ${QUIT_LABEL}`;
   return [...header, ...rows, "", quitRow, "", ...renderHelp()];
+};
+
+/** 入力モードのカーソルとして末尾に置くブロック文字。 */
+const INPUT_CURSOR = "█";
+
+/**
+ * 入力モード（todo タイトルの編集中）の画面全体を行配列へ整形する純粋関数。ヘッダと
+ * 編集中のタイトル行（末尾にカーソル）、確定 / 取消を案内する操作方法ボックスを組み立てる。
+ *
+ * @param draft - 編集中のタイトル文字列。
+ * @returns 画面に出力する行の配列。
+ */
+export const renderInputFrame = (draft: string): string[] => {
+  const header = ["clido — todo を追加", ""];
+  const prompt = `タイトル: ${draft}${INPUT_CURSOR}`;
+  return [...header, prompt, "", ...renderKeyGuide(inputHelpEntries)];
 };
