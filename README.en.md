@@ -20,6 +20,7 @@ clido
 | `reopen` | `clido reopen <id>` | Reopen a completed todo. |
 | `edit` | `clido edit <id> "<new title>"` | Update a todo title. |
 | `delete` | `clido delete <id>` | Delete a todo. |
+| `clear` | `clido clear` | Delete all completed todos at once. |
 | `show` | `clido show <id>` | Show details for a single todo. |
 | `help` | `clido help [<command>]` / `clido --help` | Show usage help. |
 | `version` | `clido --version` | Show the package version. |

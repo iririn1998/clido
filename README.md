@@ -30,6 +30,7 @@ clido
 | `reopen` | `clido reopen <id>` | 完了済み todo を未完了に戻す。 |
 | `edit` | `clido edit <id> "<新しいタイトル>"` | todo のタイトルを更新する。 |
 | `delete` | `clido delete <id>` | todo を削除する。 |
+| `clear` | `clido clear` | 完了済みの todo を一括削除する。 |
 | `show` | `clido show <id>` | 単一の todo の詳細を表示する。 |
 | `help` | `clido help [<コマンド>]` / `clido --help` | 使い方のヘルプを表示する。 |
 | `version` | `clido --version` | パッケージバージョンを表示する。 |
