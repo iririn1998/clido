@@ -1,4 +1,5 @@
 import { createAddCommand } from "../commands/add.ts";
+import { createClearCommand } from "../commands/clear.ts";
 import { createDeleteCommand } from "../commands/delete.ts";
 import { createDoneCommand } from "../commands/done.ts";
 import { createEditCommand } from "../commands/edit.ts";
@@ -21,4 +22,5 @@ export const registry: Record<string, CommandFactory> = {
   edit: createEditCommand,
   show: createShowCommand,
   delete: createDeleteCommand,
+  clear: createClearCommand,
 };
