@@ -2,7 +2,7 @@
  * 対話モード（素の `clido`）で扱うキー入力を意味づけした操作。raw mode の
  * stdin から届く生バイト列を、この有限集合のいずれかへ写像する。
  */
-export type TuiAction = "up" | "down" | "toggle" | "quit" | "none";
+export type TuiAction = "up" | "down" | "select" | "quit" | "none";
 
 /** `↑` の端末エスケープシーケンス（ESC `[A`）。 */
 const UP_ARROW = "\x1b[A";
@@ -15,8 +15,9 @@ const CTRL_C = "\x03";
  * raw mode の stdin から届いた入力チャンクを {@link TuiAction} へ変換する純粋関数。
  *
  * 矢印キー（`↑` / `↓`）と vim 風の `k` / `j` をフォーカス移動、Enter / Space を
- * 完了状態のトグル、`q` と Ctrl-C を終了に対応づける。解釈できない入力は `none`。
- * I/O に触れないため単体テスト可能で、driver 側はこの戻り値だけを見て状態遷移する。
+ * フォーカス中の項目の選択（`select`）、`q` と Ctrl-C を終了に対応づける。`select` が
+ * todo 行で完了トグルを、終了項目で終了を意味するかは driver が文脈で解釈する。
+ * 解釈できない入力は `none`。I/O に触れないため単体テスト可能。
  *
  * @param input - stdin から受け取った文字列チャンク。
  * @returns 対応する操作（未対応の入力は `none`）。
@@ -32,7 +33,7 @@ export const parseKey = (input: string): TuiAction => {
     case "\r":
     case "\n":
     case " ":
-      return "toggle";
+      return "select";
     case "q":
     case CTRL_C:
       return "quit";

@@ -4,6 +4,8 @@ import type { TodoRepository } from "../../src/repository/todo-repository.ts";
 import { runSession, type InputStream } from "../../src/tui/session.ts";
 
 const TOGGLE = "\r";
+const SPACE = " ";
+const UP = "\x1b[A";
 const DOWN = "\x1b[B";
 const QUIT = "q";
 
@@ -103,6 +105,23 @@ describe("runSession", () => {
       repo: store.repo,
       now,
       input: scriptedInput([TOGGLE, QUIT]),
+      output,
+    });
+
+    expect(store.todos.find((todo) => todo.id === 1)?.status).toBe("open");
+  });
+
+  it("quits when the quit item is selected with space, ignoring later input", async () => {
+    const store = memoryRepo([makeTodo(1, "open")]);
+    const { output } = capture();
+
+    // Move onto the quit item and select it with space. The trailing UP+TOGGLE
+    // would mark #1 done if the session were still running, so #1 staying open
+    // proves space on the quit item ended the loop.
+    await runSession({
+      repo: store.repo,
+      now,
+      input: scriptedInput([DOWN, SPACE, UP, TOGGLE]),
       output,
     });
 

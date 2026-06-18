@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Todo } from "../../src/core/todo.ts";
-import { focusedTodo, initState, moveFocus, withTodos } from "../../src/tui/state.ts";
+import {
+  focusedTodo,
+  initState,
+  isQuitFocused,
+  itemCount,
+  moveFocus,
+  withTodos,
+} from "../../src/tui/state.ts";
 
 const makeTodo = (id: number): Todo => ({
   id,
@@ -19,6 +26,30 @@ describe("initState", () => {
   });
 });
 
+describe("itemCount", () => {
+  it("counts every todo plus the trailing quit item", () => {
+    expect(itemCount({ todos, focus: 0 })).toBe(4);
+  });
+
+  it("is 1 (quit item only) for an empty list", () => {
+    expect(itemCount(initState([]))).toBe(1);
+  });
+});
+
+describe("isQuitFocused", () => {
+  it("is true when focus is on the index past the last todo", () => {
+    expect(isQuitFocused({ todos, focus: 3 })).toBe(true);
+  });
+
+  it("is false while a todo is focused", () => {
+    expect(isQuitFocused({ todos, focus: 2 })).toBe(false);
+  });
+
+  it("is true for an empty list at focus 0", () => {
+    expect(isQuitFocused(initState([]))).toBe(true);
+  });
+});
+
 describe("moveFocus", () => {
   it("moves down within bounds", () => {
     const state = moveFocus(initState(todos), 1);
@@ -30,12 +61,18 @@ describe("moveFocus", () => {
     expect(state.focus).toBe(0);
   });
 
-  it("clamps at the bottom edge without wrapping", () => {
+  it("can move past the last todo onto the quit item", () => {
     const state = moveFocus({ todos, focus: 2 }, 1);
-    expect(state.focus).toBe(2);
+    expect(state.focus).toBe(3);
+    expect(isQuitFocused(state)).toBe(true);
   });
 
-  it("is a no-op on an empty list", () => {
+  it("clamps at the quit item (bottom edge) without wrapping", () => {
+    const state = moveFocus({ todos, focus: 3 }, 1);
+    expect(state.focus).toBe(3);
+  });
+
+  it("stays put on an empty list (quit item only)", () => {
     const empty = initState([]);
     expect(moveFocus(empty, 1)).toBe(empty);
   });
@@ -47,12 +84,17 @@ describe("withTodos", () => {
     expect(state.focus).toBe(2);
   });
 
-  it("clamps the focus when the list shrinks", () => {
-    const state = withTodos({ todos, focus: 2 }, [makeTodo(1)]);
-    expect(state.focus).toBe(0);
+  it("keeps focus on the quit item across a reload", () => {
+    const state = withTodos({ todos, focus: 3 }, todos);
+    expect(state.focus).toBe(3);
   });
 
-  it("resets focus to 0 when the list becomes empty", () => {
+  it("clamps the focus into range when the list shrinks", () => {
+    const state = withTodos({ todos, focus: 3 }, [makeTodo(1)]);
+    expect(state.focus).toBe(1);
+  });
+
+  it("clamps focus to the quit item when the list becomes empty", () => {
     const state = withTodos({ todos, focus: 2 }, []);
     expect(state.focus).toBe(0);
   });
@@ -61,6 +103,10 @@ describe("withTodos", () => {
 describe("focusedTodo", () => {
   it("returns the todo at the focus index", () => {
     expect(focusedTodo({ todos, focus: 1 })?.id).toBe(2);
+  });
+
+  it("returns undefined when the quit item is focused", () => {
+    expect(focusedTodo({ todos, focus: 3 })).toBeUndefined();
   });
 
   it("returns undefined for an empty list", () => {

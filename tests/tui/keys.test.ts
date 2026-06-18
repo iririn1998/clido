@@ -12,10 +12,10 @@ describe("parseKey", () => {
     expect(parseKey("j")).toBe("down");
   });
 
-  it("maps enter (CR/LF) and space to toggle", () => {
-    expect(parseKey("\r")).toBe("toggle");
-    expect(parseKey("\n")).toBe("toggle");
-    expect(parseKey(" ")).toBe("toggle");
+  it("maps enter (CR/LF) and space to select", () => {
+    expect(parseKey("\r")).toBe("select");
+    expect(parseKey("\n")).toBe("select");
+    expect(parseKey(" ")).toBe("select");
   });
 
   it("maps q and Ctrl-C to quit", () => {
