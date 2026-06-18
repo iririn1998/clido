@@ -85,13 +85,22 @@ export const createPlainOutput = (writeOut: OutputWriter, writeErr: OutputWriter
     }
   },
   /**
-   * Todo を直接返さない成功応答を表示する。`deleted` を持つ場合は削除メッセージにする。
+   * Todo を直接返さない成功応答を表示する。`deleted` は単体削除、`cleared` は
+   * 完了済みの一括削除件数として、それぞれ専用のメッセージにする。
    *
    * @param dto - 成功応答の DTO。
    */
   success: (dto) => {
     if (typeof dto.deleted === "number") {
       writeOut(`#${dto.deleted} を削除しました。`);
+      return;
+    }
+    if (typeof dto.cleared === "number") {
+      writeOut(
+        dto.cleared === 0
+          ? "削除する完了済みの todo はありません。"
+          : `完了済みの todo を ${dto.cleared} 件削除しました。`,
+      );
       return;
     }
     writeOut(JSON.stringify(dto));
