@@ -3,7 +3,6 @@ import type { Todo } from "../../src/core/todo.ts";
 import {
   displayWidth,
   HELP_TITLE,
-  QUIT_LABEL,
   renderFrame,
   renderHelp,
   renderInputFrame,
@@ -72,21 +71,9 @@ describe("renderFrame", () => {
     expect(frame.some((line) => line.includes(HELP_TITLE))).toBe(true);
   });
 
-  it("renders the quit item unfocused while a todo is focused", () => {
-    const frame = renderFrame({ todos: [makeTodo(1, "open")], focus: 0 });
-    expect(frame).toContain(`  ${QUIT_LABEL}`);
-  });
-
-  it("points at the quit item when it is focused", () => {
-    const frame = renderFrame({ todos: [makeTodo(1, "open")], focus: 1 });
-    expect(frame).toContain("  #1 [ ] todo 1");
-    expect(frame).toContain(`> ${QUIT_LABEL}`);
-  });
-
-  it("shows an empty-state message and a focusable quit item when there are no todos", () => {
+  it("shows an empty-state message when there are no todos", () => {
     const frame = renderFrame({ todos: [], focus: 0 });
     expect(frame).toContain("todo はありません。");
-    expect(frame).toContain(`> ${QUIT_LABEL}`);
     expect(frame.some((line) => line.includes(HELP_TITLE))).toBe(true);
   });
 

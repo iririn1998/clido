@@ -47,16 +47,16 @@ export type SessionDeps = {
  * `draft`（`null` なら一覧モード、文字列なら入力モード）で切り替える。
  *
  * 一覧モードでは {@link parseKey} でフォーカス移動・項目選択・追加・一括削除・終了を扱う。
- * `select`（Enter / Space）は todo 行なら状態に応じて core の純粋関数 `complete` /
- * `reopen` を選んで `repo.update` で永続化し、一覧を読み直して再描画する。末尾の「終了」
- * 項目（`focusedTodo` が `undefined`）を選ぶとループを抜ける。`add`（`a`）は入力モードへ
- * 切り替え、`clear`（`c`）は `repo.deleteCompleted` で完了済みをまとめて削除して再描画する。
+ * `select`（Enter / Space）はフォーカス中の todo の状態に応じて core の純粋関数 `complete` /
+ * `reopen` を選んで `repo.update` で永続化し、一覧を読み直して再描画する。`add`（`a`）は
+ * 入力モードへ切り替え、`clear`（`c`）は `repo.deleteCompleted` で完了済みをまとめて削除して
+ * 再描画する。
  *
  * 入力モードでは {@link parseInputKey} で文字挿入・1文字削除・確定・取消を扱う。確定時に
  * trim 後の `draft` が非空なら `repo.add` で追加して一覧へ戻り、空なら何もせず戻る。取消は
  * 破棄して戻る。入力チャンクは `AsyncIterable` から逐次取り出すため、I/O は次のキー処理を
- * ブロックし書き込みが重ならない。`quit`（`q` / Ctrl-C）・終了項目の選択・ストリーム終端の
- * いずれでもループを抜け、raw mode 解除とカーソル再表示を `finally` で必ず行う。
+ * ブロックし書き込みが重ならない。`quit`（`q` / Ctrl-C）またはストリーム終端でループを抜け、
+ * raw mode 解除とカーソル再表示を `finally` で必ず行う。
  *
  * @param deps - repository・クロック・端末 I/O の依存一式。
  */
@@ -123,8 +123,7 @@ export const runSession = async (deps: SessionDeps): Promise<void> => {
       } else if (action === "select") {
         const target = focusedTodo(state);
         if (target === undefined) {
-          // 終了項目を選択 → ループを抜けて終了する。
-          break;
+          continue;
         }
         const at = now();
         await repo.update(target.id, (current) =>

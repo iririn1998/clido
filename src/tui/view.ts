@@ -1,19 +1,16 @@
 import type { Todo, TodoStatus } from "../core/todo.ts";
-import { isQuitFocused, type TuiState } from "./state.ts";
-
-/** 末尾の「終了」項目のラベル。 */
-export const QUIT_LABEL = "[ 終了 ]";
+import type { TuiState } from "./state.ts";
 
 /** 操作方法ボックスのタイトル。 */
 export const HELP_TITLE = "操作方法";
 
 /**
- * 操作方法ボックスに並べるキーと説明の対。Enter / Space はフォーカス中の項目を
- * 選択する操作で、todo なら完了トグル・「終了」項目なら終了を意味する。
+ * 操作方法ボックスに並べるキーと説明の対。Enter / Space はフォーカス中の todo の
+ * 完了状態を切り替える。
  */
 export const helpEntries: readonly (readonly [keys: string, description: string])[] = [
   ["↑ / ↓  (j / k)", "フォーカスを移動"],
-  ["Enter / Space", "選択（完了切替 / 終了）"],
+  ["Enter / Space", "完了状態を切替"],
   ["a", "todo を追加"],
   ["c", "完了済みを一括削除"],
   ["q / Ctrl-C", "終了"],
@@ -141,11 +138,9 @@ export const renderRow = (todo: Todo, focused: boolean): string =>
   `${pointer(focused)} #${todo.id} [${statusMark(todo.status)}] ${todo.title}`;
 
 /**
- * 画面全体を行配列へ整形する純粋関数。ヘッダ・各 todo 行・選択可能な「終了」項目・
- * 枠付きの操作方法ボックスを組み立てる。空リストなら案内文を出す。Enter / Space で
- * 選択する対象をフォーカスで示すため、終了項目も todo 行と同じ `>` ポインタで描く。
- * driver はこの戻り値を改行で連結して描画するだけで、整形ロジックは I/O から独立して
- * テストできる。
+ * 画面全体を行配列へ整形する純粋関数。ヘッダ・各 todo 行・枠付きの操作方法ボックスを
+ * 組み立てる。空リストなら案内文を出す。driver はこの戻り値を改行で連結して描画するだけで、
+ * 整形ロジックは I/O から独立してテストできる。
  *
  * @param state - 描画する画面状態。
  * @returns 画面に出力する行の配列。
@@ -156,8 +151,7 @@ export const renderFrame = (state: TuiState): string[] => {
     state.todos.length === 0
       ? ["todo はありません。"]
       : state.todos.map((todo, index) => renderRow(todo, index === state.focus));
-  const quitRow = `${pointer(isQuitFocused(state))} ${QUIT_LABEL}`;
-  return [...header, ...rows, "", quitRow, "", ...renderHelp()];
+  return [...header, ...rows, "", ...renderHelp()];
 };
 
 /** 入力モードのカーソルとして末尾に置くブロック文字。 */
