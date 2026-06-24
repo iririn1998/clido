@@ -1,4 +1,5 @@
 import type { Todo, TodoStatus } from "../core/todo.ts";
+import { logoLines } from "./logo.ts";
 import type { TuiState } from "./state.ts";
 
 /** 操作方法ボックスのタイトル。 */
@@ -146,7 +147,7 @@ export const renderRow = (todo: Todo, focused: boolean): string =>
  * @returns 画面に出力する行の配列。
  */
 export const renderFrame = (state: TuiState): string[] => {
-  const header = ["clido — todo 一覧", ""];
+  const header = [...logoLines, "", "todo 一覧", ""];
   const rows =
     state.todos.length === 0
       ? ["todo はありません。"]
@@ -165,7 +166,7 @@ const INPUT_CURSOR = "█";
  * @returns 画面に出力する行の配列。
  */
 export const renderInputFrame = (draft: string): string[] => {
-  const header = ["clido — todo を追加", ""];
+  const header = [...logoLines, "", "todo を追加", ""];
   const prompt = `タイトル: ${draft}${INPUT_CURSOR}`;
   return [...header, prompt, "", ...renderKeyGuide(inputHelpEntries)];
 };
