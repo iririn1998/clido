@@ -41,5 +41,7 @@ clido
 | `delete` | `clido delete <id>` | todo を削除する。 |
 | `clear` | `clido clear` | 完了済みの todo を一括削除する。 |
 | `show` | `clido show <id>` | 単一の todo の詳細を表示する。 |
-| `help` | `clido help [<コマンド>]` / `clido --help` | 使い方のヘルプを表示する。 |
+| `help` | `clido help [<コマンド>]` / `clido --help` / `clido <コマンド> --help` | 使い方のヘルプを表示する。 |
 | `version` | `clido --version` | パッケージバージョンを表示する。 |
+
+タイトルに空白を含める場合は引用符でくくって1引数として渡してください（例 `clido add "牛乳を買う"`）。宣言数を超える余分な引数は使用法エラー（終了コード 2）として拒否されます。`--json` はサブコマンドの前後どちらでも同じ出力形式になります（`clido --json list` / `clido list --json`）。
