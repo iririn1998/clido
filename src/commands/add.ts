@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 import type { CommandFactory } from "../app/context.ts";
-import { UsageError } from "../core/errors.ts";
+import { validateTitle } from "./args.ts";
 
 /**
  * `clido add <title>` — 新しい todo を追加する。
@@ -35,10 +35,10 @@ export const createAddCommand: CommandFactory = (deps) =>
      */
     run: async (runContext) => {
       const ctx = deps.getContext(runContext);
-      const title = String(runContext.args.title ?? "").trim();
-      if (title.length === 0) {
-        throw new UsageError("title が空です。タイトルを指定してください。");
-      }
+      const title = validateTitle(
+        runContext.args.title,
+        "title が空です。タイトルを指定してください。",
+      );
       const todo = await ctx.repo.add({ title, now: ctx.now() });
       ctx.output.todo({ todo });
     },

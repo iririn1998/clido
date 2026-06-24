@@ -74,6 +74,14 @@ describe("edit command", () => {
     await expect(invoke(command, { id: "1", title: "   " })).rejects.toBeInstanceOf(UsageError);
   });
 
+  it("rejects a title containing control characters with UsageError", async () => {
+    const repo = makeFakeRepo();
+    const { output } = makeOutput();
+    const command = createEditCommand({ getContext: () => makeContext(repo, output, fixed) });
+
+    await expect(invoke(command, { id: "1", title: "a\tb" })).rejects.toBeInstanceOf(UsageError);
+  });
+
   it("propagates NotFoundError when the todo does not exist", async () => {
     const repo = makeFakeRepo({
       update: async (id) => {

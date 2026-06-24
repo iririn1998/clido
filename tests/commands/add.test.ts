@@ -39,4 +39,12 @@ describe("add command", () => {
 
     await expect(invoke(command, { title: "   " })).rejects.toBeInstanceOf(UsageError);
   });
+
+  it("rejects a title containing control characters with UsageError", async () => {
+    const repo = makeFakeRepo();
+    const { output } = makeOutput();
+    const command = createAddCommand({ getContext: () => makeContext(repo, output, fixed) });
+
+    await expect(invoke(command, { title: "a\nb" })).rejects.toBeInstanceOf(UsageError);
+  });
 });

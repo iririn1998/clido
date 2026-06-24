@@ -1,8 +1,7 @@
 import { defineCommand } from "citty";
 import type { CommandFactory } from "../app/context.ts";
-import { UsageError } from "../core/errors.ts";
 import { rename } from "../core/todo.ts";
-import { parseId } from "./args.ts";
+import { parseId, validateTitle } from "./args.ts";
 
 /**
  * `clido edit <id> <title>` — todo のタイトルを変更する。
@@ -44,10 +43,10 @@ export const createEditCommand: CommandFactory = (deps) =>
     run: async (runContext) => {
       const ctx = deps.getContext(runContext);
       const id = parseId(runContext.args.id);
-      const title = String(runContext.args.title ?? "").trim();
-      if (title.length === 0) {
-        throw new UsageError("title が空です。新しいタイトルを指定してください。");
-      }
+      const title = validateTitle(
+        runContext.args.title,
+        "title が空です。新しいタイトルを指定してください。",
+      );
       const now = ctx.now();
       const todo = await ctx.repo.update(id, (current) => rename(current, title, now));
       ctx.output.todo({ todo });
