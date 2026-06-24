@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import cfonts from "cfonts";
 import { renderUsage, runCommand } from "citty";
 import type { ArgDef, CommandDef } from "citty";
 import { pathToFileURL } from "node:url";
@@ -10,6 +9,7 @@ import { runInteractive } from "./app/interactive.ts";
 import { createRootCommand, rootMeta } from "./app/root.ts";
 import { UsageError } from "./core/errors.ts";
 import type { Io } from "./infra/output.ts";
+import { logoLines } from "./tui/logo.ts";
 
 const versionArgs = new Set(["--version", "-v", "version"]);
 const helpArgs = new Set(["--help", "-h", "help"]);
@@ -39,14 +39,8 @@ const defaultIo: Io = {
  * @param io - Output adapter for testable command rendering.
  */
 const showBanner = (io: Io): void => {
-  cfonts.say(rootMeta.name, {
-    font: "block",
-    align: "left",
-    colors: ["cyan", "blue"],
-    space: true,
-  });
-
-  io.writeOut(`${rootMeta.description}\n`);
+  io.writeOut(logoLines.join("\n"));
+  io.writeOut(`\n${rootMeta.description}\n`);
   io.writeOut("使い方は `clido help` を参照してください。");
 };
 
