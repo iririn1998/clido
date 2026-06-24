@@ -9,7 +9,7 @@ import { parseId } from "./args.ts";
  * positional の `id` を `parseId` で正の整数へ検証し（不正なら `UsageError`、終了コード 2）、
  * repository の `get` で取得する。`get` は存在しなければ `null` を返すため、その場合はコマンド層で
  * `NotFoundError`（終了コード 1）へ変換する。状態は変更しないので `update` ではなく `get` を使う。
- * 結果は `output.todo` で描画する。
+ * 結果は `output.todoDetail` で詳細描画する（`list` の1行と異なり全フィールドを表示する）。
  *
  * @param deps - command factory の依存（`getContext`）。
  * @returns show コマンドの citty 定義。
@@ -43,6 +43,6 @@ export const createShowCommand: CommandFactory = (deps) =>
       if (todo === null) {
         throw new NotFoundError(`todo が見つかりません: #${id}`);
       }
-      ctx.output.todo({ todo });
+      ctx.output.todoDetail({ todo });
     },
   });

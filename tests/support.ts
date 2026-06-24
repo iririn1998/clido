@@ -20,16 +20,20 @@ export const makeFakeRepo = (overrides: Partial<TodoRepository> = {}): TodoRepos
 
 export type Captured = {
   todos: Todo[];
+  details: Todo[];
   lists: Todo[][];
   successes: Record<string, unknown>[];
   errors: ErrorPayload[];
 };
 
 export const makeOutput = (): { output: Output; captured: Captured } => {
-  const captured: Captured = { todos: [], lists: [], successes: [], errors: [] };
+  const captured: Captured = { todos: [], details: [], lists: [], successes: [], errors: [] };
   const output: Output = {
     todo: ({ todo }) => {
       captured.todos.push(todo);
+    },
+    todoDetail: ({ todo }) => {
+      captured.details.push(todo);
     },
     todoList: ({ todos }) => {
       captured.lists.push(todos);

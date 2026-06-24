@@ -30,7 +30,7 @@ describe("show command", () => {
     await invoke(command, { id: "1" });
 
     expect(requestedId).toBe(1);
-    expect(captured.todos).toEqual([openTodo]);
+    expect(captured.details).toEqual([openTodo]);
   });
 
   it("rejects a non-numeric id with UsageError", async () => {

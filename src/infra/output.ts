@@ -29,6 +29,8 @@ export type ErrorPayload = {
 export type Output = {
   /** Todo 単体（add / done / reopen / edit / show）。 */
   todo: (dto: { todo: Todo }) => void;
+  /** Todo 1件の詳細（show）。plain では複数行で全フィールドを表示する。 */
+  todoDetail: (dto: { todo: Todo }) => void;
   /** Todo 一覧（list）。 */
   todoList: (dto: { todos: Todo[] }) => void;
   /** Todo を直接返さない成功応答（delete の削除結果など）。 */
@@ -55,6 +57,22 @@ const renderTodoLine = (todo: Todo): string =>
   `#${todo.id} [${statusMark(todo.status)}] ${todo.title}`;
 
 /**
+ * Todo 1件を plain 表示の複数行（詳細）へ整形する。`list` の1行と異なり、状態と
+ * すべてのタイムスタンプ（未設定の `completedAt` は `-`）を見せる。ラベルは桁を
+ * 揃えて読みやすくする。
+ *
+ * @param todo - 整形対象の Todo。
+ * @returns 表示用の複数行（行配列）。
+ */
+const renderTodoDetail = (todo: Todo): string[] => [
+  `#${todo.id} ${todo.title}`,
+  `status      : ${todo.status}`,
+  `createdAt   : ${todo.createdAt}`,
+  `updatedAt   : ${todo.updatedAt}`,
+  `completedAt : ${todo.completedAt ?? "-"}`,
+];
+
+/**
  * 人間向けの plain テキスト出力を生成する。正常出力は `writeOut`、エラーは `writeErr` へ流す。
  *
  * @param writeOut - 正常出力の writer。
@@ -69,6 +87,16 @@ export const createPlainOutput = (writeOut: OutputWriter, writeErr: OutputWriter
    */
   todo: (dto) => {
     writeOut(renderTodoLine(dto.todo));
+  },
+  /**
+   * Todo 1件の詳細を複数行で表示する（`show` 用）。
+   *
+   * @param dto - 表示する Todo を包む DTO。
+   */
+  todoDetail: (dto) => {
+    for (const line of renderTodoDetail(dto.todo)) {
+      writeOut(line);
+    }
   },
   /**
    * Todo 一覧を行ごとに表示する。空なら案内文を1行出す。
@@ -130,6 +158,15 @@ export const createJsonOutput = (writeOut: OutputWriter, writeErr: OutputWriter)
    * @param dto - `{ todo }` DTO。
    */
   todo: (dto) => {
+    writeOut(JSON.stringify(dto));
+  },
+  /**
+   * Todo 1件の詳細 DTO を1行 JSON で出力する。JSON では `todo` 単体と同形式（全
+   * フィールドを含む）で十分なため、契約を保ったまま `{ todo }` を返す。
+   *
+   * @param dto - `{ todo }` DTO。
+   */
+  todoDetail: (dto) => {
     writeOut(JSON.stringify(dto));
   },
   /**
