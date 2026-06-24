@@ -107,6 +107,146 @@ const assertKnownFlags = (tokens: readonly string[], allowed: Set<string>): void
 };
 
 /**
+ * Collects the names (and aliases) of value-taking flags (`string` / `enum`) so the
+ * positional counter can skip the value token that follows `--flag <value>`.
+ *
+ * @param command - The resolved subcommand whose declared args are read.
+ * @returns The set of value-flag names (without leading dashes).
+ */
+const collectValueFlags = (command: CommandDef): Set<string> => {
+  const valueFlags = new Set<string>();
+  const args = command.args as Record<string, ArgDef> | undefined;
+  if (args !== undefined) {
+    for (const [name, def] of Object.entries(args)) {
+      if (def.type !== "string" && def.type !== "enum") {
+        continue;
+      }
+      valueFlags.add(name);
+      const alias = (def as { alias?: string | string[] }).alias;
+      if (typeof alias === "string") {
+        valueFlags.add(alias);
+      } else if (Array.isArray(alias)) {
+        for (const entry of alias) {
+          valueFlags.add(entry);
+        }
+      }
+    }
+  }
+  return valueFlags;
+};
+
+/**
+ * Counts the positional args a command declares, i.e. the maximum number of bare
+ * (non-flag) tokens it can consume.
+ *
+ * @param command - The resolved subcommand whose declared args are read.
+ * @returns The number of declared positional args.
+ */
+const countDeclaredPositionals = (command: CommandDef): number => {
+  const args = command.args as Record<string, ArgDef> | undefined;
+  if (args === undefined) {
+    return 0;
+  }
+  let count = 0;
+  for (const def of Object.values(args)) {
+    if (def.type === "positional") {
+      count += 1;
+    }
+  }
+  return count;
+};
+
+/**
+ * Rejects extra positional arguments beyond what the command declares. citty
+ * silently drops surplus positionals (e.g. `clido add foo bar` keeps only `foo`),
+ * which causes silent data loss, so this guard upholds the usage-error contract
+ * (exit code 2). Everything after `--` is treated as positional, mirroring citty.
+ *
+ * @param tokens - The raw argument tokens after the subcommand name.
+ * @param valueFlags - Value-taking flag names whose following token is a value.
+ * @param max - The number of positional args the command declares.
+ */
+const assertPositionalArity = (
+  tokens: readonly string[],
+  valueFlags: Set<string>,
+  max: number,
+): void => {
+  const positionals: string[] = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    if (token === "--") {
+      positionals.push(...tokens.slice(i + 1));
+      break;
+    }
+    if (token.startsWith("-") && token !== "-") {
+      if (token.includes("=")) {
+        continue;
+      }
+      const name = token.startsWith("--") ? token.slice(2) : token.slice(1);
+      if (valueFlags.has(name)) {
+        i += 1;
+      }
+      continue;
+    }
+    positionals.push(token);
+  }
+  if (positionals.length > max) {
+    const extras = positionals.slice(max).join(" ");
+    throw new UsageError(
+      max === 0
+        ? `余分な引数です: ${extras}`
+        : `余分な引数です: ${extras}（このコマンドは引数を ${max} 個までしか受け付けません）`,
+    );
+  }
+};
+
+/** Root が宣言する global option（前置きを許す）の正規化済みトークン集合。 */
+const rootOptionTokens = new Set(["--json", "--no-json", "--json=true", "--json=false"]);
+
+/**
+ * Finds the index of the command token in the raw args, skipping leading
+ * root-level global options (e.g. `clido --json list`). Stops scanning at `--`.
+ * Unlike a generic flag skip, only declared root options are skipped so that
+ * command-like flags (`--version` / `--help`) are still returned as the command
+ * candidate.
+ *
+ * @param rawArgs - The raw argument tokens (command and beyond).
+ * @returns The index of the first command token, or `-1` if none precedes `--`.
+ */
+const findCommandIndex = (rawArgs: readonly string[]): number => {
+  for (let i = 0; i < rawArgs.length; i += 1) {
+    const token = rawArgs[i];
+    if (token === "--") {
+      return -1;
+    }
+    if (rootOptionTokens.has(token)) {
+      continue;
+    }
+    return i;
+  }
+  return -1;
+};
+
+/**
+ * Detects a `--help` / `-h` flag among a subcommand's tokens, stopping at `--`
+ * so values after the terminator are not mistaken for the flag.
+ *
+ * @param tokens - The raw argument tokens after the subcommand name.
+ * @returns `true` if help was requested for the subcommand.
+ */
+const hasHelpFlag = (tokens: readonly string[]): boolean => {
+  for (const token of tokens) {
+    if (token === "--") {
+      break;
+    }
+    if (token === "--help" || token === "-h") {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Runs the clido command line entrypoint.
  *
  * `--version` / `--help` and their `version` / `help` subcommand aliases are
@@ -121,8 +261,15 @@ const assertKnownFlags = (tokens: readonly string[], allowed: Set<string>): void
  */
 export const runCli = async (argv: readonly string[], io: Io = defaultIo): Promise<number> => {
   const rawArgs = argv.slice(2);
-  const [command, second] = rawArgs;
-  const rootCommand = createRootCommand({ getContext: createGetContext(io) });
+  // `--json` is a root/global option, so honor it wherever it appears
+  // (`clido --json list` と `clido list --json` の双方で同じ出力形式になる)。
+  const jsonFlag = prescanJson(rawArgs);
+  const rootCommand = createRootCommand({ getContext: createGetContext(io, jsonFlag) });
+
+  // 先頭の root レベル global option（例 `--json`）を読み飛ばして実コマンドを特定する。
+  const commandIndex = findCommandIndex(rawArgs);
+  const command = commandIndex === -1 ? undefined : rawArgs[commandIndex];
+  const second = commandIndex === -1 ? undefined : rawArgs[commandIndex + 1];
 
   if (command !== undefined && versionArgs.has(command)) {
     io.writeOut(rootMeta.version);
@@ -144,8 +291,15 @@ export const runCli = async (argv: readonly string[], io: Io = defaultIo): Promi
     // 端末上なら対話的な todo 一覧を起動する。パイプ等の非 TTY では raw mode が
     // 使えずキー入力も無いため、従来どおりバナーを表示して `clido help` へ誘導する。
     if (process.stdin.isTTY === true && process.stdout.isTTY === true) {
-      await runInteractive(process.stdin, process.stdout);
-      return 0;
+      try {
+        await runInteractive(process.stdin, process.stdout);
+        return 0;
+      } catch (error) {
+        // 対話セッション中の I/O 失敗（StorageError 等）も、サブコマンドと同じ
+        // `reportError` 集約へ寄せて整形する（生スタックトレースを出さない）。
+        // 対話モードは plain 固定のため json は常に false。
+        return reportError(error, { json: false, io });
+      }
     }
     showBanner(io);
     return 0;
@@ -154,10 +308,22 @@ export const runCli = async (argv: readonly string[], io: Io = defaultIo): Promi
   try {
     const subCommands = rootCommand.subCommands as Record<string, CommandDef> | undefined;
     const matched = subCommands?.[command];
+    const subTokens = rawArgs.slice(commandIndex + 1);
     if (matched !== undefined) {
-      assertKnownFlags(rawArgs.slice(1), collectAllowedFlags(matched));
+      // `clido <command> --help|-h` を dispatch 前に処理し、usage を出して終了コード 0。
+      if (hasHelpFlag(subTokens)) {
+        io.writeOut(await renderUsage(matched, rootCommand));
+        return 0;
+      }
+      assertKnownFlags(subTokens, collectAllowedFlags(matched));
+      assertPositionalArity(
+        subTokens,
+        collectValueFlags(matched),
+        countDeclaredPositionals(matched),
+      );
     }
-    await runCommand(rootCommand, { rawArgs });
+    // root レベルフラグを取り除き、citty には `<command> ...` 形式で渡す。
+    await runCommand(rootCommand, { rawArgs: rawArgs.slice(commandIndex) });
     return 0;
   } catch (error) {
     return reportError(error, { json: prescanJson(rawArgs), io });

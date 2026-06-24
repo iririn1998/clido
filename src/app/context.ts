@@ -64,14 +64,17 @@ export type CommandFactory = (deps: CommandDeps) => CommandDef<any>;
 /**
  * production 用の `getContext` を生成する。subcommand の `args.json` を読んで
  * 出力形式を決める（`--json` は各 subcommand の `args` にも展開して伝播を担保する）。
+ * `--json` は root/global option でもあるため、前置き（`clido --json list`）を
+ * `cli.ts` が検出した場合は `forceJson` で強制し、指定位置に依らず一貫させる。
  *
  * @param io - 出力先の writer 一式。
+ * @param forceJson - root 前置きの `--json` を検出したら `true`。出力形式を強制する。
  * @returns citty の実行時 context から `Context` を作る関数。
  */
 export const createGetContext =
-  (io: Io): GetContext =>
+  (io: Io, forceJson = false): GetContext =>
   (runContext) => {
     const args = (runContext as CommandContext | undefined)?.args;
-    const json = Boolean(args?.json);
+    const json = forceJson || Boolean(args?.json);
     return createContext({ json }, io);
   };
